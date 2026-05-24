@@ -37,14 +37,17 @@
   .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin: 16px 0 10px; }
   .exercise { border-radius: 16px; padding: 16px 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
   .exercise.done { opacity: 0.5; }
-  .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; }
+  .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; font-size: 14px; font-weight: 700; }
   .checkbox.checked { color: #fff; }
   .exercise .name { font-size: 16px; font-weight: 600; }
   .exercise.done .name { text-decoration: line-through; }
   .exercise .detail { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.4; margin-top: 4px; }
-  .tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-  .tag { padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .tag { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
   .tag-channel { background: rgba(255,255,255,0.06); font-size: 11px; color: rgba(255,255,255,0.4); }
+  .tag-weight { background: rgba(255,200,50,0.15); color: #f0c030; }
+  .tag-speed { background: rgba(50,200,100,0.15); color: #40d080; }
+  .tag-rest { background: rgba(150,100,255,0.15); color: #b090ff; }
   .rest-day { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); }
   .rest-day .big { font-size: 48px; margin-bottom: 16px; }
   .complete-msg { text-align: center; margin-top: 32px; padding: 24px; border-radius: 20px; }
@@ -62,6 +65,8 @@
   .timer-actions .primary { border: none; color: #fff; padding: 12px 32px; border-radius: 14px; cursor: pointer; font-size: 16px; font-weight: 700; font-family: inherit; }
   .timer-actions .secondary { background: #2a2a4a; border: none; color: #aaa; padding: 12px 20px; border-radius: 14px; cursor: pointer; font-size: 14px; font-family: inherit; }
   .timer-close { margin-top: 20px; background: none; border: none; color: #666; cursor: pointer; font-size: 13px; text-decoration: underline; font-family: inherit; }
+  .info-banner { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; margin: 16px 0 4px; font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+  .info-banner strong { color: rgba(255,255,255,0.7); }
 </style>
 </head>
 <body>
@@ -73,44 +78,70 @@
 const { useState, useEffect, useRef } = React;
 
 const DAYS = [
-  { day:"Lunes", title:"Brazos & Hombros", emoji:"💪", color:"#E74C6F", sections:[
-    { title:"Cardio", exercises:[{ name:"Caminadora ritmo rápido", detail:"Que puedas hablar pero con esfuerzo", duration:"20-25 min" }] },
+  { day:"Lunes", title:"Brazos & Hombros", emoji:"💪", color:"#E74C6F",
+    banner:"Descanso entre series: 45-60 seg. Si al terminar las 12 reps no te cuesta, sube 1 kg.",
+    sections:[
+    { title:"Cardio", exercises:[
+      { name:"Caminadora ritmo rápido", detail:"Que puedas hablar pero con esfuerzo, sin correr", duration:"20-25 min", speed:"5.5 - 6.5 km/h" }
+    ]},
     { title:"Fuerza — Brazos", exercises:[
-      { name:"Curl de bíceps", detail:"De pie, sube las pesas doblando los codos", sets:3, reps:12 },
-      { name:"Press de hombro", detail:"Sube las pesas desde los hombros hacia arriba", sets:3, reps:12 },
-      { name:"Patada de tríceps", detail:"Inclinada, estira el brazo hacia atrás", sets:3, reps:12 },
-      { name:"Elevaciones laterales", detail:"Brazos a los lados, sube pesas a la altura de los hombros", sets:3, reps:12 },
+      { name:"Curl de bíceps", detail:"De pie, codos pegados al cuerpo, sube las pesas doblando los codos. Baja lento (3 seg)", sets:3, reps:12, weight:"3-4 kg/mano", rest:"45 seg" },
+      { name:"Press de hombro", detail:"Sentada o de pie, sube las pesas desde los hombros hasta arriba. No arquees la espalda", sets:3, reps:12, weight:"3-4 kg/mano", rest:"45 seg" },
+      { name:"Patada de tríceps", detail:"Inclínate hacia adelante apoyando una mano en la cama/silla. Estira el brazo hacia atrás", sets:3, reps:12, weight:"2-3 kg/mano", rest:"45 seg" },
+      { name:"Elevaciones laterales", detail:"De pie, brazos a los lados, sube las pesas hasta la altura de los hombros. No subas más", sets:3, reps:12, weight:"2-3 kg/mano", rest:"45 seg" },
     ]}
   ]},
-  { day:"Martes", title:"Pilates — Core", emoji:"🧘‍♀️", color:"#9B59B6", sections:[
-    { title:"YouTube — 30/40 min", exercises:[{ name:"Pilates waist + abs", detail:"Busca en YouTube", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }] }
+  { day:"Martes", title:"Pilates — Core", emoji:"🧘‍♀️", color:"#9B59B6",
+    banner:"No necesitas pesas. Sigue el video a tu ritmo, pausa si lo necesitas.",
+    sections:[
+    { title:"YouTube — 30/40 min", exercises:[
+      { name:"Pilates waist + abs", detail:"Busca en YouTube. Elige uno que dure 30-40 min y síguelo completo", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }
+    ]}
   ]},
-  { day:"Miércoles", title:"Piernas & Glúteos", emoji:"🦵", color:"#E67E22", sections:[
-    { title:"Cardio", exercises:[{ name:"Caminadora ritmo rápido", detail:"Mismo ritmo que el lunes", duration:"20-25 min" }] },
+  { day:"Miércoles", title:"Piernas & Glúteos", emoji:"🦵", color:"#E67E22",
+    banner:"Descanso entre series: 60 seg. Piernas aguantan más peso que brazos, no tengas miedo de subir.",
+    sections:[
+    { title:"Cardio", exercises:[
+      { name:"Caminadora ritmo rápido", detail:"Mismo ritmo que el lunes, calienta bien las piernas", duration:"20-25 min", speed:"5.5 - 6.5 km/h" }
+    ]},
     { title:"Fuerza — Piernas", exercises:[
-      { name:"Sentadillas con pesas", detail:"Pesas a los lados o al pecho, baja como si te sentaras", sets:3, reps:15 },
-      { name:"Zancadas (lunges)", detail:"Paso largo adelante, baja la rodilla trasera", sets:3, reps:"12/pierna" },
-      { name:"Peso muerto rumano", detail:"De pie, baja pesas por delante con espalda recta", sets:3, reps:12 },
-      { name:"Hip thrust en suelo", detail:"Tumbada boca arriba, sube la cadera", sets:3, reps:15 },
+      { name:"Sentadillas con pesas", detail:"Pesas a los lados o al pecho. Baja como si te sentaras en una silla. Rodillas no pasan de la punta del pie", sets:3, reps:15, weight:"5-8 kg/mano", rest:"60 seg" },
+      { name:"Zancadas (lunges)", detail:"Paso largo adelante, baja la rodilla trasera casi al suelo. Alterna piernas", sets:3, reps:"12/pierna", weight:"4-6 kg/mano", rest:"60 seg" },
+      { name:"Peso muerto rumano", detail:"De pie, baja las pesas por delante de las piernas con espalda recta. Siente el estiramiento en los isquiotibiales", sets:3, reps:12, weight:"5-8 kg/mano", rest:"60 seg" },
+      { name:"Hip thrust en suelo", detail:"Tumbada boca arriba, pies apoyados, sube la cadera apretando glúteos arriba. Puedes poner una pesa en la cadera", sets:3, reps:15, weight:"Sin peso o 1 pesa en cadera", rest:"45 seg" },
     ]}
   ]},
-  { day:"Jueves", title:"Pilates — Full Body", emoji:"✨", color:"#1ABC9C", sections:[
-    { title:"YouTube — 30/40 min", exercises:[{ name:"Pilates arms + full body", detail:"Busca en YouTube", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }] }
+  { day:"Jueves", title:"Pilates — Full Body", emoji:"✨", color:"#1ABC9C",
+    banner:"No necesitas pesas. Sigue el video a tu ritmo, pausa si lo necesitas.",
+    sections:[
+    { title:"YouTube — 30/40 min", exercises:[
+      { name:"Pilates arms + full body", detail:"Busca en YouTube. Si el de brazos te queda corto, combina dos videos", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }
+    ]}
   ]},
-  { day:"Viernes", title:"Cuerpo Completo", emoji:"🔥", color:"#E74C3C", sections:[
-    { title:"Cardio", exercises:[{ name:"Caminadora", detail:"Ritmo rápido", duration:"15-20 min" }] },
+  { day:"Viernes", title:"Cuerpo Completo", emoji:"🔥", color:"#E74C3C",
+    banner:"Descanso entre series: 45-60 seg. Último día de fuerza de la semana, ¡dalo todo!",
+    sections:[
+    { title:"Cardio", exercises:[
+      { name:"Caminadora", detail:"Calentamiento a ritmo rápido", duration:"15-20 min", speed:"5.5 - 6.5 km/h" }
+    ]},
     { title:"Fuerza — Full Body", exercises:[
-      { name:"Sentadillas", detail:"Con pesas, baja controlada", sets:3, reps:12 },
-      { name:"Press de hombro", detail:"Pesas desde hombros hacia arriba", sets:3, reps:12 },
-      { name:"Remo con pesas", detail:"Inclinada, tira las pesas hacia las costillas", sets:3, reps:12 },
-      { name:"Plancha", detail:"Mantén el cuerpo recto como una tabla", sets:3, duration:"30 seg" },
-      { name:"Curl de bíceps", detail:"De pie, sube pesas doblando codos", sets:3, reps:12 },
+      { name:"Sentadillas", detail:"Con pesas a los lados, baja controlada y sube explosiva", sets:3, reps:12, weight:"5-8 kg/mano", rest:"60 seg" },
+      { name:"Press de hombro", detail:"Pesas desde hombros hacia arriba, no arquees la espalda", sets:3, reps:12, weight:"3-4 kg/mano", rest:"45 seg" },
+      { name:"Remo con pesas", detail:"Inclínate hacia adelante, tira las pesas hacia las costillas apretando la espalda", sets:3, reps:12, weight:"4-6 kg/mano", rest:"45 seg" },
+      { name:"Plancha", detail:"Apóyate en antebrazos y puntas de pies, cuerpo recto como una tabla. Aprieta el abdomen", sets:3, duration:"30 seg", weight:"Solo tu cuerpo", rest:"30 seg" },
+      { name:"Curl de bíceps", detail:"De pie, codos pegados, sube lento y baja más lento", sets:3, reps:12, weight:"3-4 kg/mano", rest:"45 seg" },
     ]}
   ]},
-  { day:"Sábado", title:"Cardio Largo", emoji:"🚶‍♀️", color:"#3498DB", sections:[
-    { title:"Caminadora", exercises:[{ name:"Caminata rápida constante", detail:"Pon tu serie o playlist favorita y camina", duration:"35-45 min" }] }
+  { day:"Sábado", title:"Cardio Largo", emoji:"🚶‍♀️", color:"#3498DB",
+    banner:"Hoy es caminata larga a ritmo constante. Pon tu serie o playlist favorita y disfruta.",
+    sections:[
+    { title:"Caminadora", exercises:[
+      { name:"Caminata rápida constante", detail:"Mantén un ritmo que te haga sudar pero que puedas sostener todo el tiempo sin parar", duration:"35-45 min", speed:"5.5 - 6.0 km/h" }
+    ]}
   ]},
-  { day:"Domingo", title:"Descanso Total", emoji:"😴", color:"#7F8C8D", sections:[] },
+  { day:"Domingo", title:"Descanso Total", emoji:"😴", color:"#7F8C8D",
+    banner: null,
+    sections:[] },
 ];
 
 const TIPS = [
@@ -121,12 +152,13 @@ const TIPS = [
   { icon:"🍫", title:"Sin culpas", text:"Si te apetece algo dulce un día, cómelo. La clave es la constancia, no la perfección" },
   { icon:"📈", title:"Progresión", text:"Sube el peso de las mancuernas cuando las últimas repeticiones ya no te cuesten" },
   { icon:"😴", title:"Descanso", text:"Dormir 7-8h es tan importante como entrenar" },
+  { icon:"⚖️", title:"Peso inicial", text:"Si las últimas 2-3 reps te cuestan pero las completas con buena forma, es el peso correcto. Si no te cuesta nada, sube 1 kg" },
 ];
 
 function RestTimer({ onClose }) {
-  const [seconds, setSeconds] = useState(60);
+  const [seconds, setSeconds] = useState(45);
   const [running, setRunning] = useState(false);
-  const [initial, setInitial] = useState(60);
+  const [initial, setInitial] = useState(45);
   const intervalRef = useRef(null);
 
   const start = () => {
@@ -151,7 +183,7 @@ function RestTimer({ onClose }) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="timer-modal" onClick={e => e.stopPropagation()}>
-        <div className="timer-label">Descanso</div>
+        <div className="timer-label">Descanso entre series</div>
         <div style={{position:"relative",width:140,height:140,margin:"0 auto 24px"}}>
           <svg width="140" height="140" viewBox="0 0 140 140">
             <circle cx="70" cy="70" r="60" fill="none" stroke="#2a2a4a" strokeWidth="8"/>
@@ -249,6 +281,7 @@ function App() {
 
       <div className="content">
         {view === "routine" ? (<>
+          {day.banner && <div className="info-banner">💡 {day.banner}</div>}
           {day.sections.length === 0 && (
             <div className="rest-day"><div className="big">😴</div><div style={{fontSize:18,fontWeight:600}}>Día de descanso</div><div style={{fontSize:14,marginTop:8}}>Tu cuerpo se recupera y crece mientras descansas</div></div>
           )}
@@ -271,6 +304,9 @@ function App() {
                       <div className="tags">
                         {ex.sets && <span className="tag" style={{background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.6)"}}>{ex.sets} × {ex.reps || ex.duration}</span>}
                         {!ex.sets && ex.duration && <span className="tag" style={{background:`${day.color}22`,color:day.color}}>⏱ {ex.duration}</span>}
+                        {ex.weight && <span className="tag tag-weight">🏋️ {ex.weight}</span>}
+                        {ex.speed && <span className="tag tag-speed">🚶 {ex.speed}</span>}
+                        {ex.rest && <span className="tag tag-rest">💤 {ex.rest}</span>}
                         {ex.channels && ex.channels.map(ch => <span key={ch} className="tag tag-channel">📺 {ch}</span>)}
                       </div>
                     </div>
