@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f1a">
+<title>Mi Rutina Fitness</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: #0f0f1a; font-family: 'DM Sans', 'Segoe UI', sans-serif; color: #fff; overflow-x: hidden; }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; position: relative; }
+  .header { padding: 24px 20px 0; }
+  .header-label { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
+  .header-title { font-size: 28px; font-weight: 800; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 4px; }
+  .days-row { display: flex; gap: 6px; padding: 20px 20px 4px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .days-row::-webkit-scrollbar { display: none; }
+  .day-btn { border: none; color: rgba(255,255,255,0.4); padding: 10px 6px; border-radius: 14px; cursor: pointer; min-width: 52px; font-size: 12px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s; flex-shrink: 0; font-family: inherit; }
+  .day-btn .label { font-size: 11px; opacity: 0.8; }
+  .day-btn .emoji { font-size: 18px; }
+  .day-btn.active { color: #fff; }
+  .day-card { border-radius: 20px; padding: 20px 22px; margin: 20px 20px 0; }
+  .day-card h2 { font-size: 22px; font-weight: 800; }
+  .day-card .sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+  .progress-num { font-size: 24px; font-weight: 800; }
+  .progress-den { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .progress-bar { margin-top: 14px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .tabs { display: flex; gap: 4px; padding: 16px 20px 0; align-items: center; }
+  .tab-btn { background: transparent; border: none; color: rgba(255,255,255,0.3); padding: 8px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+  .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
+  .timer-btn { background: rgba(255,255,255,0.08); border: none; color: #fff; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; margin-left: auto; }
+  .content { padding: 12px 20px 100px; }
+  .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin: 16px 0 10px; }
+  .exercise { border-radius: 16px; padding: 16px 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: flex-start; gap: 14px; margin-bottom: 8px; }
+  .exercise.done { opacity: 0.5; }
+  .checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; }
+  .checkbox.checked { color: #fff; }
+  .exercise .name { font-size: 16px; font-weight: 600; }
+  .exercise.done .name { text-decoration: line-through; }
+  .exercise .detail { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.4; margin-top: 4px; }
+  .tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .tag { padding: 3px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .tag-channel { background: rgba(255,255,255,0.06); font-size: 11px; color: rgba(255,255,255,0.4); }
+  .rest-day { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); }
+  .rest-day .big { font-size: 48px; margin-bottom: 16px; }
+  .complete-msg { text-align: center; margin-top: 32px; padding: 24px; border-radius: 20px; }
+  .tip-card { background: rgba(255,255,255,0.06); border-radius: 16px; padding: 16px 18px; border: 1px solid rgba(255,255,255,0.06); display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; }
+  .tip-card .icon { font-size: 24px; flex-shrink: 0; }
+  .tip-card .title { font-size: 15px; font-weight: 700; }
+  .tip-card .text { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-top: 4px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(8px); }
+  .timer-modal { background: #1a1a2e; border-radius: 24px; padding: 40px 36px; text-align: center; min-width: 280; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .timer-label { color: #aaa; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+  .timer-display { font-size: 36px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .timer-presets { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+  .timer-presets button { border: none; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+  .timer-actions { display: flex; gap: 12px; justify-content: center; }
+  .timer-actions .primary { border: none; color: #fff; padding: 12px 32px; border-radius: 14px; cursor: pointer; font-size: 16px; font-weight: 700; font-family: inherit; }
+  .timer-actions .secondary { background: #2a2a4a; border: none; color: #aaa; padding: 12px 20px; border-radius: 14px; cursor: pointer; font-size: 14px; font-family: inherit; }
+  .timer-close { margin-top: 20px; background: none; border: none; color: #666; cursor: pointer; font-size: 13px; text-decoration: underline; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const DAYS = [
+  { day:"Lunes", title:"Brazos & Hombros", emoji:"💪", color:"#E74C6F", sections:[
+    { title:"Cardio", exercises:[{ name:"Caminadora ritmo rápido", detail:"Que puedas hablar pero con esfuerzo", duration:"20-25 min" }] },
+    { title:"Fuerza — Brazos", exercises:[
+      { name:"Curl de bíceps", detail:"De pie, sube las pesas doblando los codos", sets:3, reps:12 },
+      { name:"Press de hombro", detail:"Sube las pesas desde los hombros hacia arriba", sets:3, reps:12 },
+      { name:"Patada de tríceps", detail:"Inclinada, estira el brazo hacia atrás", sets:3, reps:12 },
+      { name:"Elevaciones laterales", detail:"Brazos a los lados, sube pesas a la altura de los hombros", sets:3, reps:12 },
+    ]}
+  ]},
+  { day:"Martes", title:"Pilates — Core", emoji:"🧘‍♀️", color:"#9B59B6", sections:[
+    { title:"YouTube — 30/40 min", exercises:[{ name:"Pilates waist + abs", detail:"Busca en YouTube", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }] }
+  ]},
+  { day:"Miércoles", title:"Piernas & Glúteos", emoji:"🦵", color:"#E67E22", sections:[
+    { title:"Cardio", exercises:[{ name:"Caminadora ritmo rápido", detail:"Mismo ritmo que el lunes", duration:"20-25 min" }] },
+    { title:"Fuerza — Piernas", exercises:[
+      { name:"Sentadillas con pesas", detail:"Pesas a los lados o al pecho, baja como si te sentaras", sets:3, reps:15 },
+      { name:"Zancadas (lunges)", detail:"Paso largo adelante, baja la rodilla trasera", sets:3, reps:"12/pierna" },
+      { name:"Peso muerto rumano", detail:"De pie, baja pesas por delante con espalda recta", sets:3, reps:12 },
+      { name:"Hip thrust en suelo", detail:"Tumbada boca arriba, sube la cadera", sets:3, reps:15 },
+    ]}
+  ]},
+  { day:"Jueves", title:"Pilates — Full Body", emoji:"✨", color:"#1ABC9C", sections:[
+    { title:"YouTube — 30/40 min", exercises:[{ name:"Pilates arms + full body", detail:"Busca en YouTube", duration:"30-40 min", channels:["Move With Nicole","Lottie Murphy","Blogilates"] }] }
+  ]},
+  { day:"Viernes", title:"Cuerpo Completo", emoji:"🔥", color:"#E74C3C", sections:[
+    { title:"Cardio", exercises:[{ name:"Caminadora", detail:"Ritmo rápido", duration:"15-20 min" }] },
+    { title:"Fuerza — Full Body", exercises:[
+      { name:"Sentadillas", detail:"Con pesas, baja controlada", sets:3, reps:12 },
+      { name:"Press de hombro", detail:"Pesas desde hombros hacia arriba", sets:3, reps:12 },
+      { name:"Remo con pesas", detail:"Inclinada, tira las pesas hacia las costillas", sets:3, reps:12 },
+      { name:"Plancha", detail:"Mantén el cuerpo recto como una tabla", sets:3, duration:"30 seg" },
+      { name:"Curl de bíceps", detail:"De pie, sube pesas doblando codos", sets:3, reps:12 },
+    ]}
+  ]},
+  { day:"Sábado", title:"Cardio Largo", emoji:"🚶‍♀️", color:"#3498DB", sections:[
+    { title:"Caminadora", exercises:[{ name:"Caminata rápida constante", detail:"Pon tu serie o playlist favorita y camina", duration:"35-45 min" }] }
+  ]},
+  { day:"Domingo", title:"Descanso Total", emoji:"😴", color:"#7F8C8D", sections:[] },
+];
+
+const TIPS = [
+  { icon:"🍽", title:"Método del plato", text:"½ verduras, ¼ proteína (tamaño de tu palma), ¼ carbs (un puño)" },
+  { icon:"💧", title:"Hidratación", text:"Agua siempre, evita refrescos y zumos envasados" },
+  { icon:"🥚", title:"Proteína en cada comida", text:"Pollo, pescado, huevos, legumbres, yogur griego, tofu" },
+  { icon:"🔥", title:"Cocina sana", text:"Plancha, horno o hervido mejor que frito" },
+  { icon:"🍫", title:"Sin culpas", text:"Si te apetece algo dulce un día, cómelo. La clave es la constancia, no la perfección" },
+  { icon:"📈", title:"Progresión", text:"Sube el peso de las mancuernas cuando las últimas repeticiones ya no te cuesten" },
+  { icon:"😴", title:"Descanso", text:"Dormir 7-8h es tan importante como entrenar" },
+];
+
+function RestTimer({ onClose }) {
+  const [seconds, setSeconds] = useState(60);
+  const [running, setRunning] = useState(false);
+  const [initial, setInitial] = useState(60);
+  const intervalRef = useRef(null);
+
+  const start = () => {
+    setRunning(true);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setSeconds(s => {
+        if (s <= 1) { clearInterval(intervalRef.current); setRunning(false); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const pause = () => { clearInterval(intervalRef.current); setRunning(false); };
+  const reset = () => { clearInterval(intervalRef.current); setRunning(false); setSeconds(initial); };
+  const pick = (t) => { clearInterval(intervalRef.current); setRunning(false); setInitial(t); setSeconds(t); };
+
+  useEffect(() => () => clearInterval(intervalRef.current), []);
+
+  const progress = seconds / initial;
+
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="timer-modal" onClick={e => e.stopPropagation()}>
+        <div className="timer-label">Descanso</div>
+        <div style={{position:"relative",width:140,height:140,margin:"0 auto 24px"}}>
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#2a2a4a" strokeWidth="8"/>
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#E74C6F" strokeWidth="8"
+              strokeDasharray={`${progress*377} 377`} strokeLinecap="round"
+              transform="rotate(-90 70 70)" style={{transition:"stroke-dasharray 0.3s"}}/>
+          </svg>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span className="timer-display">{Math.floor(seconds/60)}:{String(seconds%60).padStart(2,"0")}</span>
+          </div>
+        </div>
+        <div className="timer-presets">
+          {[30,45,60,90].map(t => (
+            <button key={t} onClick={()=>pick(t)} style={{background:initial===t?"#E74C6F":"#2a2a4a"}}>{t}s</button>
+          ))}
+        </div>
+        <div className="timer-actions">
+          {!running ? (
+            <button className="primary" style={{background:"#E74C6F"}} onClick={start}>{seconds<initial?"Reanudar":"Iniciar"}</button>
+          ) : (
+            <button className="primary" style={{background:"#E67E22"}} onClick={pause}>Pausar</button>
+          )}
+          <button className="secondary" onClick={reset}>Reset</button>
+        </div>
+        <button className="timer-close" onClick={onClose}>Cerrar</button>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+  const [sel, setSel] = useState(todayIdx);
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("rutina-checked")||"{}"); } catch { return {}; }
+  });
+  const [showTimer, setShowTimer] = useState(false);
+  const [view, setView] = useState("routine");
+
+  useEffect(() => { localStorage.setItem("rutina-checked", JSON.stringify(checked)); }, [checked]);
+
+  const day = DAYS[sel];
+  const allEx = day.sections.flatMap(s => s.exercises);
+  const total = allEx.length;
+  const done = allEx.filter((_,i) => checked[`${sel}-${i}`]).length;
+  const progress = total > 0 ? done/total : 0;
+
+  const toggle = (idx) => setChecked(p => ({...p, [`${sel}-${idx}`]: !p[`${sel}-${idx}`]}));
+
+  let exIdx = -1;
+
+  return (
+    <div className="app">
+      {showTimer && <RestTimer onClose={() => setShowTimer(false)}/>}
+
+      <div className="header">
+        <div className="header-label">Tu Rutina Semanal</div>
+        <h1 className="header-title" style={{backgroundImage:`linear-gradient(135deg, ${day.color}, #fff)`}}>Meta: 54 → 50 kg</h1>
+      </div>
+
+      <div className="days-row">
+        {DAYS.map((d,i) => (
+          <button key={i} className={`day-btn ${sel===i?"active":""}`} onClick={()=>setSel(i)}
+            style={{background:sel===i?d.color:"rgba(255,255,255,0.06)"}}>
+            <span className="label">{d.day.slice(0,3).toUpperCase()}</span>
+            <span className="emoji">{d.emoji}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="day-card" style={{background:`linear-gradient(135deg, ${day.color}18, ${day.color}08)`, border:`1px solid ${day.color}25`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <h2>{day.emoji} {day.title}</h2>
+            <div className="sub">{day.day}</div>
+          </div>
+          {total > 0 && (
+            <div style={{textAlign:"center"}}>
+              <div className="progress-num" style={{color:day.color}}>{Math.round(progress*100)}%</div>
+              <div className="progress-den">{done}/{total}</div>
+            </div>
+          )}
+        </div>
+        {total > 0 && (
+          <div className="progress-bar"><div className="progress-fill" style={{width:`${progress*100}%`,background:day.color}}/></div>
+        )}
+      </div>
+
+      <div className="tabs">
+        {[["routine","Ejercicios"],["tips","Consejos"]].map(([k,l]) => (
+          <button key={k} className={`tab-btn ${view===k?"active":""}`} onClick={()=>setView(k)}>{l}</button>
+        ))}
+        <button className="timer-btn" onClick={()=>setShowTimer(true)}>⏱ Timer</button>
+      </div>
+
+      <div className="content">
+        {view === "routine" ? (<>
+          {day.sections.length === 0 && (
+            <div className="rest-day"><div className="big">😴</div><div style={{fontSize:18,fontWeight:600}}>Día de descanso</div><div style={{fontSize:14,marginTop:8}}>Tu cuerpo se recupera y crece mientras descansas</div></div>
+          )}
+          {day.sections.map((section, si) => (
+            <div key={si}>
+              <div className="section-title" style={{color:day.color}}>{section.title}</div>
+              {section.exercises.map(ex => {
+                exIdx++;
+                const idx = exIdx;
+                const isDone = !!checked[`${sel}-${idx}`];
+                return (
+                  <div key={idx} className={`exercise ${isDone?"done":""}`} onClick={()=>toggle(idx)}
+                    style={{background:isDone?"rgba(255,255,255,0.03)":"rgba(255,255,255,0.06)", border:`1px solid ${isDone?"rgba(255,255,255,0.05)":"rgba(255,255,255,0.08)"}`}}>
+                    <div className={`checkbox ${isDone?"checked":""}`} style={{borderColor:isDone?day.color:"rgba(255,255,255,0.2)", background:isDone?day.color:"transparent"}}>
+                      {isDone && "✓"}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div className="name">{ex.name}</div>
+                      <div className="detail">{ex.detail}</div>
+                      <div className="tags">
+                        {ex.sets && <span className="tag" style={{background:"rgba(255,255,255,0.08)",color:"rgba(255,255,255,0.6)"}}>{ex.sets} × {ex.reps || ex.duration}</span>}
+                        {!ex.sets && ex.duration && <span className="tag" style={{background:`${day.color}22`,color:day.color}}>⏱ {ex.duration}</span>}
+                        {ex.channels && ex.channels.map(ch => <span key={ch} className="tag tag-channel">📺 {ch}</span>)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+          {progress === 1 && total > 0 && (
+            <div className="complete-msg" style={{background:`${day.color}15`}}>
+              <div style={{fontSize:40}}>🎉</div>
+              <div style={{fontSize:18,fontWeight:700,color:day.color,margin:"8px 0 4px"}}>¡Completado!</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>Otro día más cerca de tu meta</div>
+            </div>
+          )}
+        </>) : (
+          <div style={{marginTop:12}}>
+            {TIPS.map((tip,i) => (
+              <div key={i} className="tip-card">
+                <span className="icon">{tip.icon}</span>
+                <div><div className="title">{tip.title}</div><div className="text">{tip.text}</div></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+</script>
+</body>
+</html>
